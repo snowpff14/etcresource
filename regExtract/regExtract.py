@@ -48,7 +48,7 @@ class ExtractReg():
                 regStr=regStr+'|'
             sItem=item
             if REG_ENUM.REG_TYPE_CONTAIN==regType:
-                sItem='.*'+item+'*.'
+                sItem='.*'+item+'.*'
             elif REG_ENUM.REG_TYPE_FRONT==regType:
                 sItem=item+'.*'
             elif REG_ENUM.REG_TYPE_BACKWARD==regType:
