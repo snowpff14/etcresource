@@ -12,10 +12,18 @@ from tkinter import Button,ttk,StringVar
 from selenium import webdriver
 
 
+root= tkinter.Tk()
 
 class PythonGui():
+    
+    # inputFileName=None
+    # inputval=None
+    inputFileName=StringVar()
+    inputval=StringVar()
+
     def init(self):
         pass
+    
 
     def fileSelect(self,event):
         fTyp = [("","*.xlsx")]
@@ -35,6 +43,12 @@ class PythonGui():
 
         testSideOrder.createOkDialog('処理完了','登録処理完了')
     
+    def filenameDisp(self,event):
+        fTyp = [("","*.xlsx")]
+        iDir = os.path.abspath(os.path.dirname(__file__))
+        filename = filedialog.askopenfilename(filetypes = fTyp,initialdir = iDir)
+        self.inputFileName.set(filename)
+
     def fileInsert(self,event):
         dataInsertAndDelete=DataInsertAndDelete()
         dataInsertAndDelete.insertCell()
@@ -43,14 +57,19 @@ class PythonGui():
         dataInsertAndDelete=DataInsertAndDelete()
         dataInsertAndDelete.insertCell()
 
+    def popUpMsg(self,event):
+        tkinter.messagebox.showinfo('inputValue',self.inputval.get())
+
     def main(self):
-        root= tkinter.Tk()
+        # root= tkinter.Tk()
         root.title(u"Python GUI")
         root.geometry("400x300")
 
+        # inputFileName=StringVar()
+        # inputval=StringVar()
 
         #ラベル
-        Static1 = tkinter.Label(text=u'test')
+        Static1 = tkinter.Label(text=u'menu')
         Static1.pack()
         button1 = Button(text=u'ファイル追加処理', width=20)
 
@@ -65,11 +84,21 @@ class PythonGui():
         button3 = Button(text=u'自動処理', width=20)
         button3.bind("<Button-1>", self.fileSelect)
         button3.pack()
-        
+
+        button4 = Button(text=u'inputValmsg', width=20)
+        button4.bind("<Button-1>", self.popUpMsg)
+        button4.pack()
+
+        button5 = Button(text=u'ファイル名表示', width=20)
+        button5.bind("<Button-1>", self.filenameDisp)
+        button5.pack()
+
 
         # 入力欄
-        entry1=tkinter.Entry()
+        entry1=tkinter.Entry(textvariable=self.inputval)
         entry1.pack()
+        label1=tkinter.Label(textvariable=self.inputFileName)
+        label1.pack()
 
         
 
