@@ -4,6 +4,12 @@ from utils.logger import LoggerObj
 import sys
 import os
 import tkinter
+from tkinter import *
+from tkinter import messagebox
+from tkinter import filedialog
+from tkinter import ttk
+from tkinter.ttk import *
+import threading
 from excelFileOperate import DataInsertAndDelete
 from seleniumTestSite1 import TestSiteOrder
 from tkinter import messagebox
@@ -13,23 +19,26 @@ from selenium import webdriver
 
 
 root= tkinter.Tk()
-
+BUTTON_LABEL_REFERENCE='参照'
 class PythonGui():
-    
-    # inputFileName=None
-    # inputval=None
+
     inputFileName=StringVar()
     inputval=StringVar()
+
+    inputFolder=StringVar()
+    outputFolder=StringVar()
+
+    progressMsg=StringVar()
+    progressBar=None
+    progressMsgBox=None
 
     def init(self):
         pass
     
 
-    def fileSelect(self,event):
-        fTyp = [("","*.xlsx")]
-        iDir = os.path.abspath(os.path.dirname(__file__))
-        filename = filedialog.askopenfilename(filetypes = fTyp,initialdir = iDir)
-        excelFile=pd.ExcelFile(filename)
+    def execute(self):
+
+        excelFile=pd.ExcelFile(self.inputFileName.get())
         reserveSheetTemp=excelFile.parse(sheet_name='予約シート',dtype='str',header=1)
         print(reserveSheetTemp.head())
         log=LoggerObj()
@@ -43,17 +52,43 @@ class PythonGui():
 
         testSideOrder.createOkDialog('処理完了','登録処理完了')
     
-    def filenameDisp(self,event):
+    def filenameDisp(self):
         fTyp = [("","*.xlsx")]
         iDir = os.path.abspath(os.path.dirname(__file__))
         filename = filedialog.askopenfilename(filetypes = fTyp,initialdir = iDir)
         self.inputFileName.set(filename)
 
-    def fileInsert(self,event):
+    def openFile(self):
+        fTyp = [('','*.xlsx')]
+        iDir = os.path.abspath(os.path.dirname(__file__))
+        filename = filedialog.askopenfilename(filetypes = fTyp,initialdir = iDir)
+        return filename
+
+    def fileButton(self):
+       filename= self.openFile()
+       self.inputFileName.set(filename)
+
+    def doExecute(self):
+        # threading.Lock
+        thread=threading.Thread(target=self.execute)
+        thread.start()
+
+
+    def fileInsert(self):
         dataInsertAndDelete=DataInsertAndDelete()
         dataInsertAndDelete.insertCell()
 
-    def fileDelete(self,event):
+    def progressMsgSet(self,msg):
+        self.progressMsg.set(msg)
+
+    def progressStart(self):
+        self.progressBar.start(100)
+
+    def inputResultFolderButton(self):
+        dirname = filedialog.askdirectory()
+        self.outputFolder.set(dirname)
+        
+    def fileDelete(self):
         dataInsertAndDelete=DataInsertAndDelete()
         dataInsertAndDelete.insertCell()
 
@@ -61,46 +96,52 @@ class PythonGui():
         tkinter.messagebox.showinfo('inputValue',self.inputval.get())
 
     def main(self):
-        # root= tkinter.Tk()
-        root.title(u"Python GUI")
-        root.geometry("400x300")
+        root.title("Python GUI")
+
+        content = ttk.Frame(root)
+        frame = ttk.Frame(content,  relief="sunken", width=400, height=500)
+        title = ttk.Label(content, text="Python GUI")
 
         # inputFileName=StringVar()
         # inputval=StringVar()
+        content.grid(column=0, row=0)
 
-        #ラベル
-        Static1 = tkinter.Label(text=u'menu')
-        Static1.pack()
-        button1 = Button(text=u'ファイル追加処理', width=20)
+        title.grid(column=0, row=0, columnspan=4)
 
-        button1.bind("<Button-1>", self.fileInsert)
-        button1.pack()
+        fileLabel=ttk.Label(content,text="予約情報")
+        resultFolderLabel=ttk.Label(content,text="フォルダ指定")
 
-        button2 = Button(text=u'ファイル削除処理', width=20)
+        fileInput=ttk.Entry(content,textvariable=self.inputFileName,width=70)
+        resultFolderInput=ttk.Entry(content,textvariable=self.outputFolder,width=70)
 
-        button2.bind("<Button-1>", self.fileDelete)
-        button2.pack()
+        self.progressMsgBox=ttk.Label(content,textvariable=self.progressMsg,width=70)
 
-        button3 = Button(text=u'自動処理', width=20)
-        button3.bind("<Button-1>", self.fileSelect)
-        button3.pack()
+        self.progressBar=ttk.Progressbar(content,orient=HORIZONTAL,length=140,mode='indeterminate')
+        self.progressBar.configure(maximum=10,value=0)
 
-        button4 = Button(text=u'inputValmsg', width=20)
-        button4.bind("<Button-1>", self.popUpMsg)
-        button4.pack()
+        fileInputButton=ttk.Button(content, text=BUTTON_LABEL_REFERENCE,command=self.fileButton)
+        resultDirectoryInputButton=ttk.Button(content, text=BUTTON_LABEL_REFERENCE,command=self.inputResultFolderButton)
+         
+        executeButton=ttk.Button(content,text='実行',command=self.doExecute)
+        fileExecuteButton1=ttk.Button(content,text='ファイル操作 挿入実行',command=self.fileInsert)
+        fileExecuteButton2=ttk.Button(content,text='ファイル操作 デリート実行',command=self.fileDelete)
 
-        button5 = Button(text=u'ファイル名表示', width=20)
-        button5.bind("<Button-1>", self.filenameDisp)
-        button5.pack()
+        fileLabel.grid(column=1, row=1,sticky='w')
+        resultFolderLabel.grid(column=1, row=5,sticky='w')
+
+        executeButton.grid(column=1, row=6,columnspan=3,sticky='we')
+        fileExecuteButton1.grid(column=1, row=7,columnspan=3,sticky='we')
+        fileExecuteButton2.grid(column=1, row=8,columnspan=3,sticky='we')
+        self.progressMsgBox.grid(column=1, row=9,columnspan=3,sticky='we')
+        self.progressBar.grid(column=1, row=10,columnspan=3,sticky='we')
+
+        fileInput.grid(column=2, row=1)
+        resultFolderInput.grid(column=2, row=5)
+
+        fileInputButton.grid(column=3, row=1)
+        resultDirectoryInputButton.grid(column=3, row=5)
 
 
-        # 入力欄
-        entry1=tkinter.Entry(textvariable=self.inputval)
-        entry1.pack()
-        label1=tkinter.Label(textvariable=self.inputFileName)
-        label1.pack()
-
-        
 
 
         root.mainloop()
